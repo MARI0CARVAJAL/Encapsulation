@@ -1,0 +1,181 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+
+class Program
+{
+    static List<Scripture> scriptureLibrary = new List<Scripture>();
+
+    static void Main(string[] args)
+    {
+        LoadScripturesFromFile("scriptures.txt");
+
+        Console.WriteLine("Welcome to Scripture Memorization Program!\n");
+
+        while (true)
+        {
+            Console.WriteLine("Choose an option:");
+            Console.WriteLine("1. Memorize a random scripture verse");
+            Console.WriteLine("2. Scramble and unscramble a scripture verse");
+            Console.WriteLine("3. Practice typing a scripture verse");
+            Console.WriteLine("4. Exit");
+
+            string input = Console.ReadLine();
+
+            switch (input)
+            {
+                case "1":
+                    MemorizeRandomScripture();
+                    break;
+                case "2":
+                    ScrambleAndUnscrambleVerse();
+                    break;
+                case "3":
+                    PracticeTypingVerse();
+                    break;
+                case "4":
+                    Console.WriteLine("Exiting...");
+                    return;
+                default:
+                    Console.WriteLine("Invalid option. Please choose again.");
+                    break;
+            }
+        }
+    }
+
+    static void LoadScripturesFromFile(string filePath)
+    {
+        if (File.Exists(filePath))
+        {
+            string[] lines = File.ReadAllLines(filePath);
+            foreach (string line in lines)
+            {
+                string[] parts = line.Split('|');
+                if (parts.Length == 2)
+                {
+                    string reference = parts[0].Trim();
+                    string text = parts[1].Trim();
+                    scriptureLibrary.Add(new Scripture(reference, text));
+                }
+            }
+        }
+        else
+        {
+            Console.WriteLine($"File '{filePath}' not found. No scriptures loaded.");
+        }
+    }
+
+    static void MemorizeRandomScripture()
+    {
+        Random random = new Random();
+        var randomScripture = scriptureLibrary[random.Next(scriptureLibrary.Count)];
+
+        DisplayScripture(randomScripture);
+        Console.WriteLine("\nPress Enter to continue...");
+        Console.ReadLine();
+        Console.Clear();
+    }
+
+    static void ScrambleAndUnscrambleVerse()
+    {
+        Random random = new Random();
+        var randomScripture = scriptureLibrary[random.Next(scriptureLibrary.Count)];
+
+        Console.Clear();
+        Console.WriteLine("Unscramble the following scripture verse:");
+
+        string[] scrambledWords = randomScripture.Words.OrderBy(w => random.Next()).Select(w => w.Text).ToArray();
+        string scrambledVerse = string.Join(" ", scrambledWords);
+        Console.WriteLine(scrambledVerse);
+
+        Console.WriteLine("\nPress Enter to reveal the correct verse...");
+        Console.ReadLine();
+        DisplayScripture(randomScripture);
+
+        Console.WriteLine("\nPress Enter to continue...");
+        Console.ReadLine();
+        Console.Clear();
+    }
+
+    static void PracticeTypingVerse()
+    {
+        Random random = new Random();
+        var randomScripture = scriptureLibrary[random.Next(scriptureLibrary.Count)];
+
+        Console.Clear();
+        Console.WriteLine("Type the missing word(s) in the following scripture verse:");
+
+        List<Word> wordsWithBlanks = new List<Word>();
+        foreach (var word in randomScripture.Words)
+        {
+            if (random.Next(2) == 0)
+            {
+                Console.Write("[   ] ");
+                wordsWithBlanks.Add(new Word(""));
+            }
+            else
+            {
+                Console.Write(word.Text + " ");
+            }
+        }
+        Console.WriteLine();
+
+        string[] missingWords = wordsWithBlanks.Select(w => w.Text).ToArray();
+        string completeVerse = string.Join(" ", randomScripture.Words.Select(w => w.Text));
+        string typedVerse = Console.ReadLine();
+        typedVerse = typedVerse.Trim();
+
+        if (typedVerse.Equals(completeVerse, StringComparison.OrdinalIgnoreCase))
+        {
+            Console.WriteLine("Correct! Verse typed successfully.");
+        }
+        else
+        {
+            Console.WriteLine("Incorrect. The correct verse is:");
+            DisplayScripture(randomScripture);
+        }
+
+        Console.WriteLine("\nPress Enter to continue...");
+        Console.ReadLine();
+        Console.Clear();
+    }
+
+    static void DisplayScripture(Scripture scripture)
+    {
+        Console.WriteLine($"\nScripture: {scripture.Reference}\n");
+
+        foreach (var word in scripture.Words)
+        {
+            Console.Write(word.Text + " ");
+        }
+    }
+}
+
+class Scripture
+{
+    public string Reference { get; }
+    public List<Word> Words { get; }
+
+    public Scripture(string reference, string text)
+    {
+        Reference = reference;
+        Words = new List<Word>();
+
+        string[] wordArray = text.Split(' ');
+        foreach (string wordText in wordArray)
+        {
+            Words.Add(new Word(wordText));
+        }
+    }
+}
+
+class Word
+{
+    public string Text { get; }
+
+    public Word(string text)
+    {
+        Text = text;
+    }
+}
